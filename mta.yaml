@@ -29,29 +29,29 @@ modules:
       - name: valgroup-demo-connectivity
       - name: valgroup-demo-destination
 
-  - name: valgroup-demo
-    type: approuter.nodejs
-    path: app/router
-    parameters:
-      keep-existing-routes: true
-      disk-quota: 256M
-      memory: 256M
-    requires:
-      - name: srv-api
-        group: destinations
-        properties:
-          name: srv-api # must be used in xs-app.json as well
-          url: ~{srv-url}
-          forwardAuthToken: true
-      - name: valgroup-demo-auth
-      - name: valgroup-demo-destination
-      - name: valgroup-demo-html5-runtime
-      - name: valgroup-demo-portal
-    provides:
-      - name: app-api
-        properties:
-          app-protocol: ${protocol}
-          app-uri: ${default-uri}
+  # - name: valgroup-demo
+  #   type: approuter.nodejs
+  #   path: app/router
+  #   parameters:
+  #     keep-existing-routes: true
+  #     disk-quota: 256M
+  #     memory: 256M
+  #   requires:
+  #     - name: srv-api
+  #       group: destinations
+  #       properties:
+  #         name: srv-api # must be used in xs-app.json as well
+  #         url: ~{srv-url}
+  #         forwardAuthToken: true
+  #     - name: valgroup-demo-auth
+  #     - name: valgroup-demo-destination
+  #     - name: valgroup-demo-html5-runtime
+  #     - name: valgroup-demo-portal
+  #   provides:
+  #     - name: app-api
+  #       properties:
+  #         app-protocol: ${protocol}
+  #         app-uri: ${default-uri}
 
   - name: valgroup-demo-app-deployer
     type: com.sap.application.content
@@ -71,6 +71,10 @@ modules:
           artifacts:
             - browse.zip
           target-path: app/
+        - name: bupa
+          artifacts:
+            - bupa.zip
+          target-path: app/
 
   - name: valgroupdemoadminbooks
     type: html5
@@ -81,8 +85,7 @@ modules:
       commands:
         - npm ci
         - npm run build
-      supported-platforms:
-        []
+      supported-platforms: []
   - name: valgroupdemobrowse
     type: html5
     path: app/browse
@@ -92,8 +95,18 @@ modules:
       commands:
         - npm ci
         - npm run build
-      supported-platforms:
-        []
+      supported-platforms: []
+  - name: bupa
+    type: html5
+    path: app/bupa
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms: []
+
 
   - name: valgroup-demo-portal-deployer
     type: com.sap.application.content

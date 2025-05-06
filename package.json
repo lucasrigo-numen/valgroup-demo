@@ -6,21 +6,31 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@sap-cloud-sdk/connectivity": "^3.26.4",
+    "@sap-cloud-sdk/http-client": "^3.26.4",
+    "@sap-cloud-sdk/resilience": "^3.26.4",
     "@sap/cds": "^8",
-    "express": "^4",
-    "@sap/xssec": "^4"
+    "@sap/xssec": "^4",
+    "express": "^4"
   },
   "devDependencies": {
     "@cap-js/cds-types": "^0.9.0",
     "@cap-js/sqlite": "^1",
-    "@sap/cds-dk": "^8"
+    "@sap/cds-dk": "^8",
+    "rimraf": "^5.0.5",
+    "mbt": "^1.2.29"
   },
   "scripts": {
-    "start": "cds-serve"
+    "start": "cds-serve",
+    "watch-bupa": "cds watch --open bupa/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy valgroup-demo --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
   },
   "sapux": [
     "app/admin-books",
-    "app/browse"
+    "app/browse",
+    "app/bupa"
   ],
   "cds": {
     "requires": {
@@ -33,13 +43,41 @@
         "kind": "sqlite",
         "impl": "@cap-js/sqlite",
         "credentials": {
-          "url": "db.sqlite"
+          "[development]": {
+            "url": ":memory:"
+          },
+          "[production]": {
+            "url": "db.sqlite"
+          },
+          "[hybrid]": {
+            "url": "db.sqlite"
+          }
         }
       },
       "destinations": true,
       "html5-runtime": true,
       "portal": true,
-      "workzone": true
+      "workzone": true,
+      "api_business_partner": {
+        "kind": "odata-v2",
+        "model": "srv/external/api_business_partner",
+        "[production]": {
+          "credentials": {
+            "path": "/sap/opu/odata/sap/API_BUSINESS_PARTNER",
+            "destination": "S4-Portal-Fornecedores"
+          },
+          "csrf": true,
+          "csrfInBatch": true
+        },
+        "[hybrid]": {
+          "credentials": {
+            "path": "/sap/opu/odata/sap/API_BUSINESS_PARTNER",
+            "destination": "S4-Portal-Fornecedores"
+          },
+          "csrf": true,
+          "csrfInBatch": true
+        }
+      }
     }
   }
 }
