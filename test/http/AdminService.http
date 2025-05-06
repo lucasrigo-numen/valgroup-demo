@@ -1,0 +1,161 @@
+@server = http://localhost:4004
+@auth = Authorization: Basic alice:
+
+
+### Books
+# @name Books_GET
+GET {{server}}/odata/v4/admin/Books
+{{auth}}
+
+
+### Books Drafts GET
+# @name Books_Drafts_GET
+GET {{server}}/odata/v4/admin/Books?$filter=(IsActiveEntity eq false)
+{{auth}}
+
+
+### Books Draft POST
+# @name Books_Draft_POST
+POST {{server}}/odata/v4/admin/Books
+Content-Type: application/json
+{{auth}}
+
+{
+  "title": "title-27937045",
+  "descr": "descr-27937045",
+  "author": {
+    "ID": 27557830
+  },
+  "genre": {
+    "ID": 15225558
+  },
+  "stock": 12,
+  "price": 15.65,
+  "currency": {
+    "code": "821"
+  },
+  "createdAt": "2009-01-03T02:00:00.000Z",
+  "createdBy": "createdBy.gmsd1@example.net",
+  "modifiedAt": "2014-05-30T02:00:00.000Z",
+  "modifiedBy": "modifiedBy.gmsd1@example.com"
+}
+
+
+### Result from POST request above
+@draftID = {{Books_Draft_POST.response.body.$.ID}}
+
+
+### Books Draft PATCH
+# @name Books_Draft_Patch
+PATCH {{server}}/odata/v4/admin/Books(ID={{draftID}},IsActiveEntity=false)
+Content-Type: application/json
+{{auth}}
+
+{
+  "title": "title-27937045",
+  "descr": "descr-27937045",
+  "author": {
+    "ID": 27557830
+  },
+  "genre": {
+    "ID": 15225558
+  },
+  "stock": 12,
+  "price": 15.65,
+  "currency": {
+    "code": "821"
+  },
+  "createdAt": "2009-01-03T02:00:00.000Z",
+  "createdBy": "createdBy.gmsd1@example.net",
+  "modifiedAt": "2014-05-30T02:00:00.000Z",
+  "modifiedBy": "modifiedBy.gmsd1@example.com"
+}
+
+
+### Books Draft Prepare
+# @name Books_Draft_Prepare
+POST {{server}}/odata/v4/admin/Books(ID={{draftID}},IsActiveEntity=false)/AdminService.draftPrepare
+Content-Type: application/json
+{{auth}}
+
+{}
+
+
+### Books Draft Activate
+# @name Books_Draft_Activate
+POST {{server}}/odata/v4/admin/Books(ID={{draftID}},IsActiveEntity=false)/AdminService.draftActivate
+Content-Type: application/json
+{{auth}}
+
+{}
+
+
+### Authors
+# @name Authors_GET
+GET {{server}}/odata/v4/admin/Authors
+{{auth}}
+
+
+### Authors
+# @name Authors_POST
+POST {{server}}/odata/v4/admin/Authors
+Content-Type: application/json
+{{auth}}
+
+{
+  "ID": 27557830,
+  "name": "name-27557830",
+  "dateOfBirth": "2007-12-04",
+  "dateOfDeath": "2015-10-02",
+  "placeOfBirth": "placeOfBirth-27557830",
+  "placeOfDeath": "placeOfDeath-27557830",
+  "createdAt": "2000-01-19T02:00:00.000Z",
+  "createdBy": "createdBy.genra@example.org",
+  "modifiedAt": "2022-09-27T02:00:00.000Z",
+  "modifiedBy": "modifiedBy.genra@example.com"
+}
+
+
+### Authors
+# @name Authors_PATCH
+PATCH {{server}}/odata/v4/admin/Authors/27557830
+Content-Type: application/json
+{{auth}}
+
+{
+  "ID": 27557830,
+  "name": "name-27557830",
+  "dateOfBirth": "2007-12-04",
+  "dateOfDeath": "2015-10-02",
+  "placeOfBirth": "placeOfBirth-27557830",
+  "placeOfDeath": "placeOfDeath-27557830",
+  "createdAt": "2000-01-19T02:00:00.000Z",
+  "createdBy": "createdBy.genra@example.org",
+  "modifiedAt": "2022-09-27T02:00:00.000Z",
+  "modifiedBy": "modifiedBy.genra@example.com"
+}
+
+
+### Authors
+# @name Authors_DELETE
+DELETE {{server}}/odata/v4/admin/Authors/27557830
+Content-Type: application/json
+{{auth}}
+
+
+### Languages
+# @name Languages_GET
+GET {{server}}/odata/v4/admin/Languages
+{{auth}}
+
+
+### Genres
+# @name Genres_GET
+GET {{server}}/odata/v4/admin/Genres
+{{auth}}
+
+
+### Currencies
+# @name Currencies_GET
+GET {{server}}/odata/v4/admin/Currencies
+{{auth}}

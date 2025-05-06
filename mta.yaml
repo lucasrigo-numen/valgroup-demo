@@ -1,0 +1,207 @@
+_schema-version: 3.3.0
+ID: valgroup-demo
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: valgroup-demo-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: valgroup-demo-auth
+      - name: valgroup-demo-connectivity
+      - name: valgroup-demo-destination
+
+  - name: valgroup-demo
+    type: approuter.nodejs
+    path: app/router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: valgroup-demo-auth
+      - name: valgroup-demo-destination
+      - name: valgroup-demo-html5-runtime
+      - name: valgroup-demo-portal
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
+
+  - name: valgroup-demo-app-deployer
+    type: com.sap.application.content
+    path: gen
+    requires:
+      - name: valgroup-demo-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: valgroupdemoadminbooks
+          artifacts:
+            - admin-books.zip
+          target-path: app/
+        - name: valgroupdemobrowse
+          artifacts:
+            - browse.zip
+          target-path: app/
+
+  - name: valgroupdemoadminbooks
+    type: html5
+    path: app/admin-books
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+  - name: valgroupdemobrowse
+    type: html5
+    path: app/browse
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+
+  - name: valgroup-demo-portal-deployer
+    type: com.sap.application.content
+    path: app/portal
+    requires:
+      - name: valgroup-demo-portal
+        parameters:
+          content-target: true
+          service-key:
+            name: valgroup-demo-portal-key
+            config:
+              content-endpoint: developer
+      - name: valgroup-demo-auth
+      - name: valgroup-demo-html5-repo-host
+      - name: valgroup-demo-app-deployer
+    deployed-after:
+      - valgroup-demo-app-deployer
+
+  - name: valgroup-demo-destinations
+    type: com.sap.application.content
+    requires:
+      - name: valgroup-demo-auth
+        parameters:
+          service-key:
+            name: valgroup-demo-auth-key
+      - name: valgroup-demo-html5-repo-host
+        parameters:
+          service-key:
+            name: valgroup-demo-html5-repo-host-key
+      - name: srv-api
+      - name: valgroup-demo-destination
+        parameters:
+          content-target: true
+    build-parameters:
+      no-source: true
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: valgroup-demo-html5-repository
+              ServiceInstanceName: valgroup-demo-html5-repo-host
+              ServiceKeyName: valgroup-demo-html5-repo-host-key
+              sap.cloud.service: valgroupdemo.service
+            - Name: valgroup-demo-auth
+              Authentication: OAuth2UserTokenExchange
+              ServiceInstanceName: valgroup-demo-auth
+              ServiceKeyName: valgroup-demo-auth-key
+              sap.cloud.service: valgroupdemo.service
+
+resources:
+  - name: valgroup-demo-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: valgroup-demo-${org}-${space}
+        tenant-mode: dedicated
+  - name: valgroup-demo-connectivity
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+  - name: valgroup-demo-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: valgroup-demo-srv-api
+                URL: ~{srv-api/srv-url}
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+              - Name: ui5
+                URL: https://ui5.sap.com
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+
+  - name: valgroup-demo-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: valgroup-demo-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+  - name: valgroup-demo-portal
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: portal
+      service-plan: standard
