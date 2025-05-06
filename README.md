@@ -23,3 +23,14 @@ File or Folder | Purpose
 ## Learn More
 
 Learn more at https://cap.cloud.sap/docs/get-started/.
+
+
+
+## Build and Deploy
+
+On the project root, run:
+- Update SQLite database: `cds deploy --to sqlite`
+- Freeze project dependencies: `npm update --package-lock-only`
+- Build the MTAR file: `mbt build -t gen --mtar mta.tar`
+- Login to Cloud Foundry: `cf login` (only first time)
+- Deploy to CF: `cf deploy gen/mta.tar`

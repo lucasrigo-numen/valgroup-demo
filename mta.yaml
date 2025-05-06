@@ -11,6 +11,8 @@ build-parameters:
       commands:
         - npm ci
         - npx cds build --production
+        - xcopy .\\db\\data .\\gen\\srv\\srv\\data\\ /y
+        - xcopy .\\db.sqlite .\\gen\\srv /y
 modules:
   - name: valgroup-demo-srv
     type: nodejs
@@ -55,26 +57,26 @@ modules:
 
   - name: valgroup-demo-app-deployer
     type: com.sap.application.content
-    path: gen
+    path: .
     requires:
       - name: valgroup-demo-html5-repo-host
         parameters:
           content-target: true
     build-parameters:
-      build-result: app/
+      build-result: resources
       requires:
         - name: valgroupdemoadminbooks
           artifacts:
             - admin-books.zip
-          target-path: app/
+          target-path: resources/
         - name: valgroupdemobrowse
           artifacts:
             - browse.zip
-          target-path: app/
+          target-path: resources/
         - name: bupa
           artifacts:
             - bupa.zip
-          target-path: app/
+          target-path: resources/
 
   - name: valgroupdemoadminbooks
     type: html5
@@ -83,7 +85,7 @@ modules:
       build-result: dist
       builder: custom
       commands:
-        - npm ci
+        - npm install
         - npm run build
       supported-platforms: []
   - name: valgroupdemobrowse
@@ -93,7 +95,7 @@ modules:
       build-result: dist
       builder: custom
       commands:
-        - npm ci
+        - npm install
         - npm run build
       supported-platforms: []
   - name: bupa
@@ -103,27 +105,27 @@ modules:
       build-result: dist
       builder: custom
       commands:
-        - npm ci
-        - npm run build
+        - npm install
+        - npm run build:cf
       supported-platforms: []
 
 
-  - name: valgroup-demo-portal-deployer
-    type: com.sap.application.content
-    path: app/portal
-    requires:
-      - name: valgroup-demo-portal
-        parameters:
-          content-target: true
-          service-key:
-            name: valgroup-demo-portal-key
-            config:
-              content-endpoint: developer
-      - name: valgroup-demo-auth
-      - name: valgroup-demo-html5-repo-host
-      - name: valgroup-demo-app-deployer
-    deployed-after:
-      - valgroup-demo-app-deployer
+  # - name: valgroup-demo-portal-deployer
+  #   type: com.sap.application.content
+  #   path: app/portal
+  #   requires:
+  #     - name: valgroup-demo-portal
+  #       parameters:
+  #         content-target: true
+  #         service-key:
+  #           name: valgroup-demo-portal-key
+  #           config:
+  #             content-endpoint: developer
+  #     - name: valgroup-demo-auth
+  #     - name: valgroup-demo-html5-repo-host
+  #     - name: valgroup-demo-app-deployer
+  #   deployed-after:
+  #     - valgroup-demo-app-deployer
 
   - name: valgroup-demo-destinations
     type: com.sap.application.content
@@ -213,8 +215,8 @@ resources:
     parameters:
       service: html5-apps-repo
       service-plan: app-runtime
-  - name: valgroup-demo-portal
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: portal
-      service-plan: standard
+  # - name: valgroup-demo-portal
+  #   type: org.cloudfoundry.managed-service
+  #   parameters:
+  #     service: portal
+  #     service-plan: standard
